@@ -1,16 +1,29 @@
-from fasthtml.common import *    # Your FastHTML code (if this is needed for routing)
+from dotenv import load_dotenv
+load_dotenv()  # This loads variables from your .env file
+
+from fasthtml.common import *  # Ensure that the 'fasthtml' module is in your PYTHONPATH
+from fastapi import Response, Request
 from openai import OpenAI
 from sqlalchemy import create_engine, MetaData
 import os
-import json
 
-# Initialize the app (you can still use FastHTML for routing if desired)
+# Initialize the FastHTML app (which sets up routing)
 app, rt = fast_app()
 
-# Set up OpenAI using your API key from the environment
+# Set up the OpenAI client using the API key from the environment variables
 openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-# --- Helper Functions (same as before) ---
+# --- Route to Serve the Frontend (index.html) ---
+
+@rt("/")
+def index():
+    # Adjust the path to where your index.html is located relative to this file.
+    index_path = os.path.join(os.path.dirname(__file__), "..", "frontend", "index.html")
+    with open(index_path, "r", encoding="utf-8") as f:
+        html_content = f.read()
+    return Response(content=html_content, media_type="text/html")
+
+# --- Helper Functions ---
 
 def get_responsibilities(organization, job_role):
     prompt = f"What are the typical responsibilities of a {job_role} in a {organization}?"
@@ -77,21 +90,27 @@ def get_summary(results_text):
 # --- API Endpoint for Analysis ---
 
 @rt("/analyze", methods=["POST"])
-def post(organization: str, job_role: str, db_conn: str):
+def analyze(organization: str, job_role: str, db_conn: str):
     # Step 1: Get responsibilities using OpenAI
     responsibilities = get_responsibilities(organization, job_role)
+    
     # Step 2: Retrieve the database schema
     schema_str = get_db_schema(db_conn)
-    # Step 3: Get analytical questions and SQL queries
+    
+    # Step 3: Get analytical questions, SQL queries, and visualization suggestions
     analytical_response = get_analytical_questions(organization, job_role, responsibilities, schema_str)
     questions, queries, visualizations = parse_questions_queries(analytical_response)
-    # Step 4: Execute the SQL queries and obtain results
+    
+    # Step 4: Execute each SQL query
     results = [execute_query(db_conn, query) for query in queries]
-    # Create a simple results text summary for further summarization
+    
+    # Step 5: Compile a text summary from the questions and results for further summarization
     results_text = "\n".join([f"Question: {q}\nResult: {str(res)}" for q, (res, _) in zip(questions, results)])
-    # Step 5: Get a summary of insights from OpenAI
+    
+    # Step 6: Get a summary of insights from OpenAI based on the query results
     summary = get_summary(results_text)
-    # Return JSON (or you could format as HTML fragments)
+    
+    # Return a JSON response (could be used by your frontend)
     return {
         "organization": organization,
         "job_role": job_role,
@@ -103,5 +122,8 @@ def post(organization: str, job_role: str, db_conn: str):
         "summary": summary
     }
 
+# --- Run the App with uvicorn ---
+
 if __name__ == "__main__":
-    app.run()
+    import uvicorn
+    uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
