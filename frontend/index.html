@@ -154,7 +154,7 @@
     <div class="container">
         <div class="hero">
             <h1>QueryGenie</h1>
-            <p class="subtitle">AI that knows your questions before you ask.</p>
+            <p class="subtitle"> <i>AI that knows your questions before you ask.</i></p>
             <p class="description">
                 Transform your business insights with our AI-powered query generation platform. 
                 Simply describe your company and responsibilities, and let QueryGenie do the rest.
@@ -165,23 +165,28 @@
             <form id="queryForm">
                 <div class="form-group">
                     <label for="companyName">Company Name</label>
-                    <input type="text" id="companyName" required>
+                    <input type="text" id="companyName" placeholder="Enter your company name" required>
                 </div>
                 <div class="form-group">
                     <label for="companyDescription">Company Description</label>
-                    <textarea id="companyDescription" required></textarea>
+                    <textarea id="companyDescription" placeholder="Describe your company's main business, industry, and goals" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="jobRole">Job Title</label>
+                    <input type="text" id="jobRole" placeholder="e.g., Data Analyst, Product Manager, etc." required>
                 </div>
                 <div class="form-group">
                     <label for="responsibilities">Main Responsibilities</label>
-                    <textarea id="responsibilities" required></textarea>
+                    <textarea id="responsibilities" placeholder="Describe your main tasks and responsibilities" required></textarea>
                 </div>
                 <button type="submit">Generate Insights</button>
             </form>
         </div>
 
         <div class="insights-container">
-            Your AI-Powered Insights will appear here
+            <i>Your AI-Powered Insights will appear here</i>
         </div>
     </div>
+    <script src="index.js"></script>
 </body>
 </html> 
