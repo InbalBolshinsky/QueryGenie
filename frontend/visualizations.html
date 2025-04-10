@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QueryGenie - Visualizations</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #2563EB;
+            --primary-light: #60A5FA;
+            --accent: #E5E7EB;
+            --background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
+            --form-bg: rgba(30, 41, 59, 0.8);
+            --text: #F8FAFC;
+            --text-secondary: #CBD5E1;
+            --button-hover: #1D4ED8;
+            --highlight: #FCD34D;
+            --border-glow: rgba(37, 99, 235, 0.2);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        body {
+            background: var(--background);
+            color: var(--text);
+            line-height: 1.6;
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at 50% 50%, rgba(37, 99, 235, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 3rem 2rem;
+            width: 100%;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        h1 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 3.75rem;
+            margin-bottom: 1.25rem;
+            color: var(--text);
+            font-weight: 700;
+            letter-spacing: -0.025em;
+            background: linear-gradient(135deg, var(--text) 0%, var(--primary-light) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            position: relative;
+            display: inline-block;
+        }
+
+        .subtitle {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.5rem;
+            color: var(--primary-light);
+            margin-bottom: 1.5rem;
+            font-weight: 500;
+            font-style: italic;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            letter-spacing: -0.01em;
+        }
+
+        .visualization-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .visualization-card {
+            background: var(--form-bg);
+            padding: 2rem;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--border-glow);
+            backdrop-filter: blur(10px);
+            min-height: 400px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .visualization-grid .visualization-card:nth-child(4),
+        .visualization-grid .visualization-card:nth-child(5) {
+            grid-column: span 3;
+        }
+
+        .card-header {
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-glow);
+        }
+
+        .card-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.25rem;
+            color: var(--text);
+            margin-bottom: 0.5rem;
+        }
+
+        .card-description {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        .text-insight {
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-top: 1rem;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            color: var(--text-secondary);
+            flex: 1;
+        }
+
+        .chart-container {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 8px;
+            padding: 1rem;
+            min-height: 350px;
+        }
+
+        .back-button {
+            display: inline-block;
+            background: var(--primary);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 500;
+            margin-top: 2rem;
+            transition: all 0.2s ease;
+        }
+
+        .back-button:hover {
+            background: var(--button-hover);
+            transform: translateY(-1px);
+        }
+
+        @media (max-width: 768px) {
+            .visualization-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .container {
+                padding: 2rem 1rem;
+            }
+
+            h1 {
+                font-size: 2.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>QueryGenie</h1>
+        <p class="subtitle">AI that knows your questions before you ask</p>
+    </div>
+
+    <div class="visualization-grid">
+        <div class="visualization-card">
+            <div class="card-header">
+                <h2 class="card-title">Top 3 Performers</h2>
+            </div>
+            <div class="text-insight">
+                🥇 Nancy Freehafer – 22,255.25<br>
+                Leads the team with exceptional sales performance.<br><br>
+                🥈 Anne Hellung-Larsen – 19,974.25<br>
+                A close second, delivering strong and consistent results.<br><br>
+                🥉 Michael Neipper – 6,378.00<br>
+                Solid contributor, rounding out the top three earners.
+            </div>
+        </div>
+
+        <div class="visualization-card">
+            <div class="card-header">
+                <h2 class="card-title">Top Reordered Products</h2>
+            </div>
+            <div class="text-insight">
+                🍫 Chocolate – 5 reorders<br>
+                Consistently reordered, indicating strong and steady demand.<br><br>
+                ☕ Coffee – 5 reorders<br>
+                Tied for the top spot, showing high customer reliance.<br><br>
+                🥭 Dried Plums, 🥣 Clam Chowder, 🍵 Green Tea – 4 reorders each<br>
+                Regularly restocked, reflecting steady popularity among returning buyers.
+            </div>
+        </div>
+
+        <div class="visualization-card">
+            <div class="card-header">
+                <h2 class="card-title">Top 3 Most Efficient Carriers</h2>
+            </div>
+            <div class="text-insight">
+                🚚 BlueArrow Logistics – 0.36 days<br>
+                Leads in efficiency with same-day or next-day shipping speed, ideal for urgent orders.<br><br>
+                🚚 SwiftTrack Express – 0.78 days<br>
+                Maintains strong consistency in near-next-day deliveries across regions.<br><br>
+                🚚 Pinnacle Freight – 2.29 days<br>
+                Performs well, though with slightly longer average times compared to the top two.
+            </div>
+        </div>
+
+        <div class="visualization-card">
+            <div class="card-header">
+            </div>
+            <div class="chart-container">
+                <img src="images/output.png" 
+                     alt="Top Products by Revenue Chart"
+                     style="width: 100%; height: auto; object-fit: contain; border-radius: 8px;">
+            </div>            
+        </div>
+
+        <div class="visualization-card">
+            <div class="card-header">
+            </div>
+            <div class="chart-container">
+                <img src="images/avg_order_value_lollipop_chart.png" 
+                     alt="Top Customers by Order Value Chart"
+                     style="width: 100%; height: auto; object-fit: contain; border-radius: 8px;">
+            </div>            
+        </div>
+    </div>
+
+    <a href="index.html" class="back-button">Back to Query Generator</a>
+</div>
+<script src="visualizations.js"></script>
+</body>
+</html>

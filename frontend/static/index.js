@@ -31,11 +31,11 @@ Based on this information, generate relevant business insights and questions tha
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
-          companyName: companyName,
-          companyDescription: companyDescription,
-          jobRole: jobRole,
-          responsibilities: responsibilities
-        })
+          company_name: companyName,
+          company_description: companyDescription,
+          job_title: jobRole,
+          job_responsibilities: responsibilities
+        })        
       });
 
       if (!response.ok) {
@@ -49,12 +49,21 @@ Based on this information, generate relevant business insights and questions tha
       // Here, we're simply pretty-printing the JSON response.
       // You can improve this by formatting the data as HTML elements or visualizations.
       insightsContainer.innerHTML = `
-          <div style="text-align: left;">
-              <h3>Generated Insights for ${companyName}</h3>
-              <p>Role: ${jobRole}</p>
-              <p>${prompt}</p>
+      <h3>Insights for ${companyName}</h3>
+      <p><strong>Role:</strong> ${jobRole}</p>
+      <div>
+        ${result.questions.map((q, i) => `
+          <div style="margin-top: 20px;">
+            <h4>Question ${i + 1}: ${q}</h4>
+            <pre><code>${result.queries[i]}</code></pre>
+            <p><strong>Visualization:</strong> ${result.visualizations[i]}</p>
+            <pre>${JSON.stringify(result.results[i], null, 2)}</pre>
           </div>
-      `;
+        `).join("")}
+      </div>
+      <h4>Summary:</h4>
+      <p>${result.summary}</p>
+    `;    
     } catch (error) {
       console.error("Error:", error);
       insightsContainer.innerText = "Error: " + error.message;
