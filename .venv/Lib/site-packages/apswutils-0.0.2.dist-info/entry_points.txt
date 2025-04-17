@@ -1,0 +1,2 @@
+[nbdev]
+apswutils = apswutils._modidx:d
