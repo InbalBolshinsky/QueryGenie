@@ -1,9 +1,11 @@
 from dotenv import load_dotenv
-load_dotenv()
+from pathlib import Path
+# Load environment variables from .env file
+env_path = Path(__file__).parent.parent / ".env"
+load_dotenv(dotenv_path=env_path)
 
 import os
 import logging
-from pathlib import Path
 from fastapi import FastAPI, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -140,31 +142,36 @@ def schema_preview():
 
 @rt("/analyze", methods=["POST"])
 def analyze(data: AnalyzeRequest):
-    schema_str = get_db_schema()
-    prompt = generate_analysis_prompt(
-        data.company_name,
-        data.company_description,
-        data.job_title,
-        data.job_responsibilities,
-        schema_str
-    )
-    openai_response = ask_openai(prompt)
-    questions, queries, visualizations = parse_questions_queries(openai_response)
-    results = [execute_query(query) for query in queries]
-    results_text = "\n".join([f"Question: {q}\nResult: {str(res)}" for q, (res, _) in zip(questions, results)])
-    summary = get_summary(results_text)
-    return {
-        "company_name": data.company_name,
-        "job_title": data.job_title,
-        "company_description": data.company_description,
-        "job_responsibilities": data.job_responsibilities,
-        "schema": schema_str,
-        "questions": questions,
-        "queries": queries,
-        "visualizations": visualizations,
-        "results": [res for res, _ in results],
-        "summary": summary
-    }
+    try:
+        schema_str = get_db_schema()
+        prompt = generate_analysis_prompt(
+            data.company_name,
+            data.company_description,
+            data.job_title,
+            data.job_responsibilities,
+            schema_str
+        )
+        openai_response = ask_openai(prompt)
+        questions, queries, visualizations = parse_questions_queries(openai_response)
+        results = [execute_query(query) for query in queries]
+        results_text = "\n".join([f"Question: {q}\nResult: {str(res)}" for q, (res, _) in zip(questions, results)])
+        summary = get_summary(results_text)
+        return {
+            "company_name": data.company_name,
+            "job_title": data.job_title,
+            "company_description": data.company_description,
+            "job_responsibilities": data.job_responsibilities,
+            "schema": schema_str,
+            "questions": questions,
+            "queries": queries,
+            "visualizations": visualizations,
+            "results": [res for res, _ in results],
+            "summary": summary
+        }
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return {"error": str(e)}
 
 # --- Run the app ---
 if __name__ == "__main__":

@@ -25,7 +25,7 @@ Based on this information, generate relevant business insights and questions tha
 
     try {
       // Send a POST request to the backend's analyze endpoint
-      const response = await fetch("http://localhost:8000/analyze", {
+      const response = await fetch("/analyze", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -43,7 +43,13 @@ Based on this information, generate relevant business insights and questions tha
       }
 
       // Parse the response as JSON
-      const result = await response.json();
+    const result = await response.json();
+    console.log("Result from backend:", result);
+
+      // Check if backend returned an error
+    if (result.error) {
+    throw new Error("Server error: " + result.error);
+    }
 
       // Display the results in the insights container
       // Here, we're simply pretty-printing the JSON response.
