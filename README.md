@@ -22,13 +22,13 @@ QueryGenie allows users to input a company description, job title, and responsib
 
 ## Technologies Used
 
-# Frontend: HTML, CSS, JavaScript, Chart.js
+### Frontend: HTML, CSS, JavaScript, Chart.js
 
-# Backend: FastAPI, SQLAlchemy
+### Backend: FastAPI, SQLAlchemy
 
-# AI Integration: OpenAI API
+### AI Integration: OpenAI API
 
-# Database: MySQL (Northwind schema)
+### Database: MySQL (Northwind schema)
 
 
 ## About the Hackathon
