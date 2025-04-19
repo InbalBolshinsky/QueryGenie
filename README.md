@@ -20,21 +20,23 @@ QueryGenie allows users to input a company description, job title, and responsib
 
 ## Project Structure
 
-QueryGenie/ 
-├── backend/ │   
-   ├── main.py              
-    # FastAPI backend with OpenAI + SQL logic ├── frontend/ │
-   ├── index.html
-    # Home page with form input 
-│   ├── visualizations.html  
-    # Page for displaying results│
-   └── static/ │       
-         ├── index.js         
-         # Frontend logic 
-│        ├── visualizations.js 
-│   └── GenieAnimation.json 
-├── .env.example            
-# Example environment configuration 
-├── requirements.txt        
-# Python dependencies 
-└── README.md
+## Technologies Used
+
+# Frontend: HTML, CSS, JavaScript, Chart.js
+
+# Backend: FastAPI, SQLAlchemy
+
+# AI Integration: OpenAI API
+
+# Database: MySQL (Northwind schema)
+
+
+## About the Hackathon
+
+This project was developed during the 8th National Israeli Hackathon (האקתון הלאומי ה-8), hosted by HIT (Holon Institute of Technology) in collaboration with Israeli government ministries.
+Event site: https://www.ortra.com/events/hackathon5/תכנית.aspx
+
+## License
+
+MIT License
+
