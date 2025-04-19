@@ -1,30 +1,18 @@
 document.addEventListener("DOMContentLoaded", function () {
-  // Get the form element and the container where insights will be displayed
   const form = document.getElementById("queryForm");
   const insightsContainer = document.querySelector(".insights-container");
 
   form.addEventListener("submit", async function (e) {
-    e.preventDefault(); // Prevent the default form submission behavior
+    e.preventDefault();
 
-    // Retrieve values from the form input fields
     const companyName = document.getElementById("companyName").value;
     const companyDescription = document.getElementById("companyDescription").value;
     const jobRole = document.getElementById("jobRole").value;
     const responsibilities = document.getElementById("responsibilities").value;
 
-    // Create the prompt for the AI
-    const prompt = `Company: ${companyName}
-Description: ${companyDescription}
-Job Role: ${jobRole}
-Responsibilities: ${responsibilities}
-
-Based on this information, generate relevant business insights and questions that would be valuable for this role.`;
-
-    // Optionally, display a loading message while awaiting the response
     insightsContainer.innerText = "Generating AI-powered insights, please wait...";
 
     try {
-      // Send a POST request to the backend's analyze endpoint
       const response = await fetch("/analyze", {
         method: "POST",
         headers: {
@@ -35,44 +23,95 @@ Based on this information, generate relevant business insights and questions tha
           company_description: companyDescription,
           job_title: jobRole,
           job_responsibilities: responsibilities
-        })        
+        })
       });
 
       if (!response.ok) {
         throw new Error("Server error: " + response.statusText);
       }
 
-      // Parse the response as JSON
-    const result = await response.json();
-    console.log("Result from backend:", result);
+      const result = await response.json();
+      console.log("Result from backend:", result);
 
-      // Check if backend returned an error
-    if (result.error) {
-    throw new Error("Server error: " + result.error);
-    }
+      if (result.error) {
+        throw new Error("Server error: " + result.error);
+      }
 
-      // Display the results in the insights container
-      // Here, we're simply pretty-printing the JSON response.
-      // You can improve this by formatting the data as HTML elements or visualizations.
+      // Build main layout
       insightsContainer.innerHTML = `
-      <h3>Insights for ${companyName}</h3>
-      <p><strong>Role:</strong> ${jobRole}</p>
-      <div>
-        ${result.questions.map((q, i) => `
-          <div style="margin-top: 20px;">
-            <h4>Question ${i + 1}: ${q}</h4>
-            <pre><code>${result.queries[i]}</code></pre>
-            <p><strong>Visualization:</strong> ${result.visualizations[i]}</p>
-            <pre>${JSON.stringify(result.results[i], null, 2)}</pre>
-          </div>
-        `).join("")}
-      </div>
-      <h4>Summary:</h4>
-      <p>${result.summary}</p>
-    `;    
+        <h3>Insights for ${companyName}</h3>
+        <p><strong>Role:</strong> ${jobRole}</p>
+        <div id="questions-area"></div>
+        <h4>Summary:</h4>
+        <p>${result.summary}</p>
+      `;
+
+      const questionsArea = document.getElementById("questions-area");
+
+      result.questions.forEach((question, i) => {
+        const questionBlock = document.createElement("div");
+        questionBlock.style.marginTop = "40px";
+
+        const chartId = `chart-${i}`;
+
+        questionBlock.innerHTML = `
+          <h4>Question ${i + 1}: ${question}</h4>
+          <pre><code>${result.queries[i]}</code></pre>
+          <p><strong>Visualization:</strong> ${result.visualizations[i]}</p>
+          <pre>${JSON.stringify(result.results[i], null, 2)}</pre>
+          <canvas id="${chartId}" height="250"></canvas>
+        `;
+
+        questionsArea.appendChild(questionBlock);
+      });
+
+      // Render charts only after canvases exist in DOM
+      result.results.forEach((data, i) => {
+        if (!Array.isArray(data) || data.length === 0) return;
+
+        const keys = Object.keys(data[0]);
+        const labels = data.map(row => row[keys[0]]);
+        const values = data.map(row => row[keys[1]]);
+
+        const ctx = document.getElementById(`chart-${i}`).getContext("2d");
+
+        new Chart(ctx, {
+          type: getChartType(result.visualizations[i]),
+          data: {
+            labels: labels,
+            datasets: [{
+              label: result.questions[i],
+              data: values,
+              backgroundColor: "rgba(54, 162, 235, 0.5)",
+              borderColor: "rgba(54, 162, 235, 1)",
+              borderWidth: 1
+            }]
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              legend: { display: true },
+              title: {
+                display: true,
+                text: result.questions[i]
+              }
+            }
+          }
+        });
+      });
+
     } catch (error) {
       console.error("Error:", error);
-      insightsContainer.innerText = "Error: " + error.message;
+      insightsContainer.innerText = "An error occurred while generating insights. Please try again.";
+    }
+
+    function getChartType(vizLabel) {
+      if (!vizLabel) return "bar";
+      const type = vizLabel.toLowerCase();
+      if (type.includes("bar")) return "bar";
+      if (type.includes("line")) return "line";
+      if (type.includes("pie")) return "pie";
+      return "bar";
     }
   });
 });
