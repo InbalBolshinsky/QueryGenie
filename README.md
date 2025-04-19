@@ -20,4 +20,21 @@ QueryGenie allows users to input a company description, job title, and responsib
 
 ## Project Structure
 
-QueryGenie/ ├── backend/ │   ├── main.py              # FastAPI backend with OpenAI + SQL logic ├── frontend/ │   ├── index.html           # Home page with form input │   ├── visualizations.html  # Page for displaying results │   └── static/ │       ├── index.js         # Frontend logic │       ├── visualizations.js │       └── GenieAnimation.json ├── .env.example             # Example environment configuration ├── requirements.txt         # Python dependencies └── README.md
+QueryGenie/ 
+├── backend/ │   
+   ├── main.py              
+    # FastAPI backend with OpenAI + SQL logic ├── frontend/ │
+   ├── index.html
+    # Home page with form input 
+│   ├── visualizations.html  
+    # Page for displaying results│
+   └── static/ │       
+         ├── index.js         
+         # Frontend logic 
+│        ├── visualizations.js 
+│   └── GenieAnimation.json 
+├── .env.example            
+# Example environment configuration 
+├── requirements.txt        
+# Python dependencies 
+└── README.md
