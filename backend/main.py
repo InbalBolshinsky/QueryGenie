@@ -6,6 +6,7 @@ env_path = Path(__file__).parent.parent / ".env"
 load_dotenv(dotenv_path=env_path)
 
 import os
+import requests
 import json
 import logging
 from fastapi import FastAPI, Response
@@ -13,7 +14,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from sqlalchemy import create_engine, MetaData, text
-from openai import OpenAI
+#from openai import OpenAI
 from fasthtml.common import fast_app
 from fastapi.responses import FileResponse
 from starlette.routing import Mount
@@ -66,7 +67,7 @@ def visualizations():
 
 
 # OpenAI client
-openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+# openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 # Database
 DB_CONN = os.getenv("DATABASE_URL")
@@ -90,16 +91,30 @@ def get_db_schema():
             schema_str += f"  - {column.name} ({column.type})\n"
     return schema_str
 
-def ask_openai(prompt: str) -> str:
+def ask_ollama(prompt: str) -> str:
     try:
-        resp = openai_client.chat.completions.create(
-            model="gpt-3.5-turbo",
-            messages=[{"role": "user", "content": prompt}]
+        response = requests.post(
+            "http://localhost:11434/api/generate",
+            json={
+                "model": "mistral",
+                "prompt": prompt,
+                "stream": False
+            }
         )
-        return resp.choices[0].message.content
+
+        data = response.json()
+
+        if "response" in data:
+            return data["response"].strip()
+        else:
+            logging.error(f"Ollama unexpected response: {data}")
+            return ""
+
     except Exception as e:
-        logging.error(f"OpenAI error: {e}")
+        logging.error(f"Ollama request error: {e}")
         return ""
+
+
 
 def execute_query(query: str):
     with engine.connect() as conn:
@@ -117,7 +132,7 @@ def get_summary(results_text: str) -> str:
         f"Based on the following data analysis results:\n{results_text}\n"
         "What are the key insights or conclusions that can be derived?"
     )
-    return ask_openai(summary_prompt)
+    return ask_ollama(summary_prompt)
 
 # --- API Endpoints ---
 @rt("/schema")
@@ -155,7 +170,8 @@ def analyze(data: AnalyzeRequest):
                 "Return only a JSON object. No text, no markdown, no explanation."
             )
 
-            raw = ask_openai(single_prompt)
+            raw = ask_ollama(single_prompt)
+
             try:
                 parsed = json.loads(raw)
                 q = parsed["question"].strip()
