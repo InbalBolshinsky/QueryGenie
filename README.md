@@ -18,8 +18,6 @@ QueryGenie allows users to input a company description, job title, and responsib
 - **FastAPI Backend**: Lightweight and scalable server logic.
 - **Clean Frontend**: Built with HTML, JS, and custom styling.
 
-## Project Structure
-
 ## Technologies Used
 
 ### Frontend: HTML, CSS, JavaScript, Chart.js
