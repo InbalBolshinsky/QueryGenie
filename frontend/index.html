@@ -26,7 +26,24 @@
             box-sizing: border-box;
             font-family: 'Outfit', sans-serif;
         }
-
+        #genie-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(255, 255, 255, 0.9);
+            z-index: 9999;
+            display: none;
+            align-items: center;
+            justify-content: center;
+          }
+          
+          #genie-animation {
+            width: 300px;
+            height: 300px;
+          }
+          
         body {
             background: var(--background);
             color: var(--text);
@@ -270,6 +287,10 @@
         </style>
     </head>
     <body>
+        <div id="genie-overlay" style="display: none;">
+            <div id="genie-animation"></div>
+        </div>
+          
       <div class="connection-status">
         <div class="connection-label">connected to:</div>
         <div class="db-name">NORTHWIND-DB</div>
@@ -310,6 +331,16 @@
       </div>
     
     <script src="/static/index.js"></script>
-
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.9.6/lottie.min.js"></script>
+    <script>
+      const genieAnim = lottie.loadAnimation({
+        container: document.getElementById("genie-animation"),
+        renderer: "svg",
+        loop: true,
+        autoplay: true,
+        path: "/static/genie.json"
+      });
+    </script>
+    
     </body>
     </html>

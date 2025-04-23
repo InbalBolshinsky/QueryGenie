@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>QueryGenie – Visualizations</title>
+  <title>QueryGenie – Visualizations</title>
   <link rel="icon" href="/GenieLamp.ico" />
   <link
     href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap"
@@ -45,27 +45,25 @@
       z-index: 0;
     }
     #genie-overlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100vw;
-        height: 100vh;
-        background: rgba(255,255,255, 0.9);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 9999;
-      }
-      
-      #genie-animation {
-        width: 200px;
-        height: 200px;
-      }
-      
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(255,255,255, 0.9);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+    }
+    #genie-animation {
+      width: 200px;
+      height: 200px;
+    }
     .container {
-      max-width: 1200px;
+      max-width: 100%;
+      padding: 3rem 5vw;
       margin: 0 auto;
-      padding: 3rem 2rem;
       position: relative;
       z-index: 1;
     }
@@ -92,21 +90,24 @@
       letter-spacing: -0.01em;
     }
     .visualization-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      display: flex;
+      flex-direction: column;
       gap: 2rem;
       margin-bottom: 2rem;
-    }
+      align-items: center; /* center cards horizontally */
+    }    
     .visualization-card {
+      width: 100%;
+      max-width: 1000px; /* perfect full-width feel on desktop */
       background: var(--form-bg);
-      padding: 2rem;
+      padding: 3rem;
       border-radius: 16px;
       box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
       border: 1px solid var(--border-glow);
       backdrop-filter: blur(10px);
       display: flex;
       flex-direction: column;
-    }
+    }     
     .card-header {
       margin-bottom: 1rem;
       border-bottom: 1px solid var(--border-glow);
@@ -114,19 +115,34 @@
     }
     .card-title {
       font-family: 'Space Grotesk', sans-serif;
-      font-size: 1.25rem;
+      font-size: 2rem;
+      font-weight: 700;
       color: var(--text);
-    }
-    .chart-container {
-      flex: 1;
+      margin: 0;
+      line-height: 1.4;
       display: flex;
-      align-items: center;
-      justify-content: center;
+      flex-direction: column;
+    }
+    
+    .card-title .prefix {
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--primary-light);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.25rem;
+    }      
+    .chart-container {
+      height: 500px;
       background: rgba(255,255,255,0.02);
       border-radius: 8px;
-      padding: 1rem;
-      margin: 1rem 0;
-    }
+      padding: 1.5rem;
+      margin: 1.5rem 0;
+    }       
+    canvas {
+      width: 100% !important;
+      height: 100% !important;
+    }      
     .text-insight {
       background: rgba(255,255,255,0.02);
       border-radius: 8px;
@@ -136,6 +152,29 @@
       color: var(--text-secondary);
       margin-top: 1rem;
     }
+    .stat-card {
+      background: rgba(255, 255, 255, 0.02);
+      border-radius: 12px;
+      padding: 2rem;
+      text-align: center;
+      margin-top: 1rem;
+      border: 1px solid var(--border-glow);
+    }
+    
+    .stat-number {
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: var(--primary-light);
+    }
+    
+    .stat-label {
+      margin-top: 0.5rem;
+      font-size: 1rem;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    
     .back-button {
       display: inline-block;
       background: var(--primary);
@@ -157,29 +196,23 @@
   </style>
 </head>
 <body>
-    <div id="genie-overlay">
-        <div id="genie-animation"></div>
+  <div id="genie-overlay">
+    <div id="genie-animation"></div>
+  </div>
+  <main id="content" style="visibility: hidden;">
+    <div class="container">
+      <div class="header">
+        <h1>QueryGenie</h1>
+        <p class="subtitle">AI that knows your questions before you ask</p>
       </div>
-<main id="content" style="visibility: hidden;">
-  <div class="container">
-    <div class="header">
-      <h1>QueryGenie</h1>
-      <p class="subtitle">AI that knows your questions before you ask</p>
+      <div class="visualization-grid"></div>
+      <a href="/" class="back-button">← Back to Query Generator</a>
     </div>
+  </main>
 
-    <!-- JS will populate these cards -->
-    <div class="visualization-grid"></div>
-
-    <a href="/" class="back-button">← Back to Query Generator</a>
-    </div>
-
-  <!-- your visualization script -->
   <script defer src="/static/visualizations.js"></script>
-
-  <!-- Lottie for genie animation -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.9.6/lottie.min.js"></script>
   <script>
-    // Initialize genie animation
     const genieAnim = lottie.loadAnimation({
       container: document.getElementById('genie-animation'),
       renderer: 'svg',
@@ -188,7 +221,6 @@
       path: '/static/genie.json'
     });
 
-    // Function to hide overlay and reveal content
     function hideGenie() {
       document.getElementById('genie-overlay').style.display = 'none';
       document.getElementById('content').style.visibility = 'visible';
