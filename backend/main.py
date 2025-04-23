@@ -6,7 +6,7 @@ env_path = Path(__file__).parent.parent / ".env"
 load_dotenv(dotenv_path=env_path)
 
 import os
-import requests
+import re
 import json
 import logging
 from fastapi import FastAPI, Response
@@ -14,10 +14,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from sqlalchemy import create_engine, MetaData, text
-#from openai import OpenAI
+from openai import OpenAI
 from fasthtml.common import fast_app
 from fastapi.responses import FileResponse
 from starlette.routing import Mount
+
+#print("🔐 Loaded API key:", os.getenv("OPENAI_API_KEY")[:10] + "...")
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
@@ -67,7 +69,7 @@ def visualizations():
 
 
 # OpenAI client
-# openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 # Database
 DB_CONN = os.getenv("DATABASE_URL")
@@ -91,29 +93,18 @@ def get_db_schema():
             schema_str += f"  - {column.name} ({column.type})\n"
     return schema_str
 
-def ask_ollama(prompt: str) -> str:
+def ask_openai(prompt: str) -> str:
     try:
-        response = requests.post(
-            "http://localhost:11434/api/generate",
-            json={
-                "model": "mistral",
-                "prompt": prompt,
-                "stream": False
-            }
+        response = openai_client.chat.completions.create(
+            model="gpt-3.5-turbo", 
+            messages=[{"role": "user", "content": prompt}]
         )
-
-        data = response.json()
-
-        if "response" in data:
-            return data["response"].strip()
-        else:
-            logging.error(f"Ollama unexpected response: {data}")
-            return ""
-
+        return response.choices[0].message.content.strip()
     except Exception as e:
-        logging.error(f"Ollama request error: {e}")
+        logging.error(f"🔥 OpenAI error: {e}")
+        import traceback
+        traceback.print_exc()
         return ""
-
 
 
 def execute_query(query: str):
@@ -132,7 +123,8 @@ def get_summary(results_text: str) -> str:
         f"Based on the following data analysis results:\n{results_text}\n"
         "What are the key insights or conclusions that can be derived?"
     )
-    return ask_ollama(summary_prompt)
+    return ask_openai(summary_prompt)
+
 
 # --- API Endpoints ---
 @rt("/schema")
@@ -151,7 +143,6 @@ def analyze(data: AnalyzeRequest):
         while len(questions) < 5 and attempts < max_attempts:
             attempts += 1
 
-            # Prompt for exactly one insight
             single_prompt = (
                 f"You are a senior data analyst and MySQL expert.\n\n"
                 f"Company Name: {data.company_name}\n"
@@ -159,27 +150,35 @@ def analyze(data: AnalyzeRequest):
                 f"Job Title: {data.job_title}\n"
                 f"Job Responsibilities: {data.job_responsibilities}\n\n"
                 f"Here is the database schema:\n{schema_str}\n\n"
-                "Your task: Generate ONE business question relevant to this job. "
-                "Return a JSON object with:\n"
-                "- `question`: the business question\n"
-                "- `sql`: a syntactically valid MySQL query using only the schema\n"
-                "- `visualization`: a recommended chart type (Bar Chart, Line Chart, Pie Chart, etc.)\n\n"
-                "Use only tables and columns from the schema.\n"
-                "Always use full table names (no aliases).\n"
-                "Always put JOINs before WHERE clauses.\n"
-                "Return only a JSON object. No text, no markdown, no explanation."
+                "Important context: The current date is **December 31, 2006**.\n"
+                "All your analyses and time-based SQL filters should assume that today is 2006-12-31.\n"
+                "Avoid using NOW(), CURDATE(), or 'last 3 months'. Instead, use concrete date ranges in 2006.\n\n"
+                "Your task: Generate ONE relevant business question based on the job and data.\n"
+                "Respond with ONLY a valid JSON object in this exact structure:\n"
+                "{\n"
+                "  \"question\": \"...\",\n"
+                "  \"sql\": \"...\",\n"
+                "  \"visualization\": \"Bar Chart | Line Chart | Pie Chart | etc.\"\n"
+                "}\n"
+                "Do not include any explanation, extra text, or markdown. Only valid JSON as shown above."
             )
 
-            raw = ask_ollama(single_prompt)
+            
+            raw = ask_openai(single_prompt)
+            logging.info(f"🔎 Raw GPT Response:\n{raw}")
 
             try:
-                parsed = json.loads(raw)
+                # Remove ```json ... ``` wrappers if GPT adds them
+                cleaned_raw = re.sub(r"```(?:json)?\s*([\s\S]*?)\s*```", r"\1", raw.strip())
+                parsed = json.loads(cleaned_raw)
                 q = parsed["question"].strip()
-                sql = parsed["sql"].strip()
+                sql = ' '.join(parsed["sql"].split()).strip()
                 viz = parsed["visualization"].strip()
-            except Exception:
-                logging.warning("Failed to parse GPT response, retrying...")
+            except Exception as e:
+                logging.warning(f"❌ Failed to parse GPT response: {e}")
+                logging.warning(f"⚠️ GPT raw response (cleaned):\n{cleaned_raw}")
                 continue
+
 
             # Dedupe and skip if empty
             if not sql or q in seen_q or sql in seen_sql:
@@ -188,8 +187,9 @@ def analyze(data: AnalyzeRequest):
             # Execute & skip if fails or empty
             res, _ = execute_query(sql)
             if isinstance(res, str) or not res:
-                logging.info("Empty/failed result, retrying...")
+                logging.info(f"❌ Skipped query: {sql}")
                 continue
+
 
             questions.append(q)
             queries.append(sql)
