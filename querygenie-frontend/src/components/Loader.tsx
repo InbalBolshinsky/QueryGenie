@@ -53,7 +53,12 @@ export default function Loader() {
             autoPlay={true}
             style={{ width: '100%', height: '100%' }}
           />
+          
         )}
+         <div className="animate-pulse text-sm text-gray-400">
+         ✨ Summoning your business insights...<br />
+          Hang tight while the Genie works its magic! ✨
+        </div>
       </div>
     </div>
   );
