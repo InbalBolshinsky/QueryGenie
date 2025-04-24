@@ -69,6 +69,7 @@ QueryGenie/
 │     └─ styles/globals.css
 ├─ README.md
 └─ LICENSE
+
 ---
 
 ## Quick Start
@@ -87,6 +88,7 @@ cd frontend
 npm install
 npm run dev      # http://localhost:5173
 
+---
 
 ## Contributing
 Pull requests are welcome!
