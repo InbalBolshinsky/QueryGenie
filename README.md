@@ -69,6 +69,7 @@ QueryGenie/
 │     └─ styles/globals.css
 ├─ README.md
 └─ LICENSE
+---
 
 ## Quick Start
 ### 1. Clone repo
