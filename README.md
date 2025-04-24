@@ -69,7 +69,7 @@ QueryGenie/
 │     └─ styles/globals.css
 ├─ README.md
 └─ LICENSE
-
+```
 ---
 
 ## Quick Start
