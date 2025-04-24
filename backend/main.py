@@ -146,22 +146,27 @@ def analyze(data: AnalyzeRequest):
                 f"Job Title: {data.job_title}\n"
                 f"Job Responsibilities: {data.job_responsibilities}\n\n"
                 f"Here is the database schema:\n{schema_str}\n\n"
-                "Important context: The current date is **December 31, 2006**.\n"
+                "Important context: The current date is December 31, 2006.\n"
                 "All SQL queries must use fixed date ranges in 2006 (e.g., use '2006-01-01' to '2006-12-31').\n"
-                "Avoid using dynamic expressions like NOW(), CURDATE(), or 'last 3 months'.\n\n"
-                "Do not mention the year 2006 in the question. The user already knows this. Only use it in SQL filters.\n\n"
-                "Your task: Generate ONE relevant business question based on the job and data.\n"
-                "Respond with ONLY a valid JSON object in this exact structure:\n"
+                "Avoid using NOW(), CURDATE(), or relative expressions like 'last 3 months'.\n"
+                "Do not mention the year 2006 in the question — only use it in SQL filters.\n\n"
+                "Your task:\n"
+                "Generate ONE relevant business question based on the job, company, and schema.\n"
+                "Choose a visualization type that best suits the nature of the data:\n"
+                "- Use Pie Chart for proportions/categories.\n"
+                "- Use Line Chart for trends over time.\n"
+                "- Use Bar Chart for comparisons.\n"
+                "- Use Area, Donut, or Stacked Bar where appropriate.\n\n"
+                "Respond ONLY with valid JSON in this exact format:\n"
                 "{\n"
                 "  \"question\": \"...\",\n"
                 "  \"sql\": \"...\",\n"
-                "  \"visualization\": \"Bar Chart | Line Chart | Pie Chart | etc.\"\n"
+                "  \"visualization\": \"Bar Chart | Line Chart | Pie Chart | Area Chart | Stacked Bar | Donut Chart | etc.\"\n"
                 "}\n"
-                "Do not include any explanation, extra text, or markdown. Only valid JSON as shown above."
+                "Do not include any explanation, markdown, or extra formatting."
             )
-
+            
             raw = ask_openai(prompt)
-            logging.info(f"🔎 Raw GPT Response:\n{raw}")
 
             try:
                 cleaned_raw = sanitize_json_string(raw)
