@@ -34,13 +34,13 @@ def rt(path: str, methods=["GET"]):
 
 
 # Mount static files
-static_path = Path(__file__).parent.parent / "frontend" / "static"
-app.router.routes.append(Mount("/static", app=StaticFiles(directory=static_path), name="static"))
+build_path = Path(__file__).parent.parent / "querygenie-frontend" / "build"
+# app.mount("/", StaticFiles(directory=build_path, html=True), name="frontend")
 
 
 @app.get("/GenieLamp.ico")
 async def favicon():
-    return FileResponse(static_path / "GenieLamp.ico")
+    return FileResponse(build_path / "GenieLamp.ico")
 
 
 app.add_middleware(
@@ -50,26 +50,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-
-@rt("/")
-def index():
-    index_path = Path(__file__).parent.parent / "frontend" / "index.html"
-    with open(index_path, "r", encoding="utf-8") as f:
-        return Response(content=f.read(), media_type="text/html")
-
-@rt("/loader.html")
-def loader():
-    loader_path = Path(__file__).parent.parent / "frontend" / "loader.html"
-    with open(loader_path, "r", encoding="utf-8") as f:
-        return Response(f.read(), media_type="text/html")
-
-@rt("/visualizations.html")
-def visualizations():
-    viz_path = Path(__file__).parent.parent / "frontend" / "visualizations.html"
-    with open(viz_path, "r", encoding="utf-8") as f:
-        return Response(content=f.read(), media_type="text/html")
-
 
 # OpenAI client
 openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
