@@ -1,18 +1,39 @@
-/* Loader.overlay */
 .overlay {
-    position: fixed;
-    top: 0; left: 0;
-    width: 100vw; height: 100vh;
-    background: rgba(255,255,255,0.9);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 9999;
+  position: fixed;
+  top: 0; left: 0;
+  width: 100vw; height: 100vh;
+  background: rgba(255,255,255,0.9);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+}
+
+  
+  .animation {
+    width: 400px;
+    height: 400px;
+  }
+
+  .loaderText {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1.5rem; 
+    font-weight: 600;
+    letter-spacing: -0.015em;
+    color: var(--primary); 
+    text-align: center;
+    margin-top: 1rem;
+    animation: pulse 2s infinite;
   }
   
-  /* Loader.animation */
-  .animation {
-    width: 300px;
-    height: 300px;
+  @keyframes pulse {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.5;
+    }
   }
+  
   

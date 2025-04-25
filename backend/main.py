@@ -30,7 +30,7 @@ else:
     logging.warning("⚠️ React build directory not found — skipping static mount.")
 
 
-# Favicon (optional)
+# Favicon endpoint
 @app.get("/GenieLamp.ico")
 async def favicon():
     return FileResponse(build_path / "GenieLamp.ico")

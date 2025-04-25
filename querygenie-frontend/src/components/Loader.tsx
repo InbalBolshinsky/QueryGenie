@@ -45,20 +45,10 @@ export default function Loader() {
 
   return (
     <div className={styles.overlay}>
-      <div className={styles.animation}>
-        {animationData && (
-          <Lottie
-            animationData={animationData}
-            loop={true}
-            autoPlay={true}
-            style={{ width: '100%', height: '100%' }}
-          />
-          
-        )}
-         <div className="animate-pulse text-sm text-gray-400">
-         ✨ Summoning your business insights...<br />
-          Hang tight while the Genie works its magic! ✨
-        </div>
+      <Lottie animationData={animationData} className={styles.animation} />
+      <div className={styles.loaderText}>
+        ✨ Summoning your business insights...<br />
+        Hang tight while the Genie works its magic! ✨
       </div>
     </div>
   );
