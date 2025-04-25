@@ -4,18 +4,15 @@ import os
 import re
 import json
 import logging
-
 from fastapi import FastAPI, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
-from pydantic import BaseModel
 from sqlalchemy import create_engine, MetaData, text
 from openai import OpenAI
-from starlette.routing import Mount
-from fasthtml.common import fast_app
+from pydantic import BaseModel
 
-# Load environment variables from .env file
+# Load environment variables
 env_path = Path(__file__).parent.parent / ".env"
 load_dotenv(dotenv_path=env_path)
 
@@ -25,24 +22,20 @@ logging.basicConfig(level=logging.INFO)
 # Initialize FastAPI app
 app = FastAPI()
 
-
-def rt(path: str, methods=["GET"]):
-    def decorator(func):
-        app.api_route(path, methods=methods)(func)
-        return func
-    return decorator
-
-
-# Mount static files
+# Mount React static build
 build_path = Path(__file__).parent.parent / "querygenie-frontend" / "build"
-# app.mount("/", StaticFiles(directory=build_path, html=True), name="frontend")
+if build_path.exists():
+    app.mount("/", StaticFiles(directory=build_path, html=True), name="frontend")
+else:
+    logging.warning("⚠️ React build directory not found — skipping static mount.")
 
 
+# Favicon endpoint
 @app.get("/GenieLamp.ico")
 async def favicon():
     return FileResponse(build_path / "GenieLamp.ico")
 
-
+# CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -58,13 +51,12 @@ openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 DB_CONN = os.getenv("DATABASE_URL")
 engine = create_engine(DB_CONN)
 
-
+# Request model
 class AnalyzeRequest(BaseModel):
     company_name: str
     company_description: str
     job_title: str
     job_responsibilities: str
-
 
 # --- Helper Functions ---
 def get_db_schema():
@@ -77,7 +69,6 @@ def get_db_schema():
             schema_str += f"  - {column.name} ({column.type})\n"
     return schema_str
 
-
 def ask_openai(prompt: str) -> str:
     try:
         response = openai_client.chat.completions.create(
@@ -87,10 +78,7 @@ def ask_openai(prompt: str) -> str:
         return response.choices[0].message.content.strip()
     except Exception as e:
         logging.error(f"🔥 OpenAI error: {e}")
-        import traceback
-        traceback.print_exc()
         return ""
-
 
 def execute_query(query: str):
     with engine.connect() as conn:
@@ -101,44 +89,35 @@ def execute_query(query: str):
             logging.error(f"SQL execution error: {e}")
             return str(e), []
 
-
 def get_summary(results_text: str) -> str:
     if "error" in results_text.lower():
         return "Some queries failed; unable to provide a reliable summary."
     summary_prompt = (
-        f"Based on the following data analysis results:\n{results_text}\n"
-        "What are the key insights or conclusions that can be derived?"
+        "Assume today is December 31, 2006.\n"
+        "You are writing a final business summary report for a stakeholder.\n"
+        "Write a structured and complete list of 5 bullet-point insights based only on the following results:\n\n"
+        f"{results_text}\n\n"
+        "Write clearly and do NOT repeat the year 2006. Do not trail off. Finish each bullet point with a full sentence."
     )
     return ask_openai(summary_prompt)
 
-
-def sanitize_json_string(raw: str) -> str:
-    raw = re.sub(r"```(?:json)?\s*([\s\S]*?)\s*```", r"\1", raw.strip())
-
-    def escape_string(match):
-        content = match.group(1)
-        content = content.replace('\n', '\\n').replace('\r', '')
-        return f'"{content}"'
-
-    return re.sub(r'"([^"\\]*(?:\\.[^"\\]*)*)"', escape_string, raw)
-
-
 # --- API Endpoints ---
-@rt("/schema")
+@app.get("/schema")
 def schema_preview():
     return {"schema": get_db_schema()}
 
-
-@rt("/analyze", methods=["POST"])
+@app.post("/analyze")
 def analyze(data: AnalyzeRequest):
     try:
         schema_str = get_db_schema()
+
         questions, queries, visualizations, results = [], [], [], []
         seen_q, seen_sql = set(), set()
         attempts, max_attempts = 0, 15
 
         while len(questions) < 5 and attempts < max_attempts:
             attempts += 1
+
             prompt = (
                 f"You are a senior data analyst and MySQL expert.\n\n"
                 f"Company Name: {data.company_name}\n"
@@ -149,29 +128,23 @@ def analyze(data: AnalyzeRequest):
                 "Important context: The current date is December 31, 2006.\n"
                 "All SQL queries must use fixed date ranges in 2006 (e.g., use '2006-01-01' to '2006-12-31').\n"
                 "Avoid using NOW(), CURDATE(), or relative expressions like 'last 3 months'.\n"
-                "Do not mention the year 2006 in the question — only use it in SQL filters.\n\n"
-                "Your task:\n"
-                "Generate ONE relevant business question based on the job, company, and schema.\n"
-                "Choose a visualization type that best suits the nature of the data:\n"
-                "- Use Pie Chart for proportions/categories.\n"
-                "- Use Line Chart for trends over time.\n"
-                "- Use Bar Chart for comparisons.\n"
-                "- Use Area, Donut, or Stacked Bar where appropriate.\n\n"
-                "Respond ONLY with valid JSON in this exact format:\n"
+                "You must not mention the year 2006 in the business question or answer — only use it silently in SQL filters.\n"
+                "Your task: Generate ONE relevant business question based on the job and data.\n"
+                "Respond with ONLY a valid JSON object in this exact structure:\n"
                 "{\n"
                 "  \"question\": \"...\",\n"
                 "  \"sql\": \"...\",\n"
-                "  \"visualization\": \"Bar Chart | Line Chart | Pie Chart | Area Chart | Stacked Bar | Donut Chart | etc.\"\n"
+                "  \"visualization\": \"Bar Chart | Line Chart | Pie Chart | etc.\"\n"
                 "}\n"
-                "Do not include any explanation, markdown, or extra formatting."
+                "Do not include any explanation, extra text, or markdown. Only valid JSON as shown above."
             )
-            
+
             raw = ask_openai(prompt)
+            logging.info(f"🔎 Raw GPT Response:\n{raw}")
 
             try:
-                cleaned_raw = sanitize_json_string(raw)
+                cleaned_raw = re.sub(r"```(?:json)?\s*([\s\S]*?)\s*```", r"\1", raw.strip())
                 parsed = json.loads(cleaned_raw)
-
                 q = parsed["question"].strip()
                 sql = ' '.join(parsed["sql"].split()).strip()
                 viz = parsed["visualization"].strip()
@@ -215,7 +188,7 @@ def analyze(data: AnalyzeRequest):
         logging.exception("Analyze error:")
         return {"error": str(e)}
 
-
+# Run the server
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
