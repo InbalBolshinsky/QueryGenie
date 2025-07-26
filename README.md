@@ -1,5 +1,4 @@
 # QueryGenie
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Hackathon](https://img.shields.io/badge/HIT%20Hackathon-8th-blueviolet)](https://www.ortra.com/events/hackathon5/%D7%AA%D7%9B%D7%A0%D7%99%D7%AA.aspx)
 [![Made with FastAPI](https://img.shields.io/badge/Backend-FastAPI-009688?logo=fastapi)](#tech-stack)
 [![Made with React](https://img.shields.io/badge/Frontend-React-61DAFB?logo=react)](#tech-stack)
