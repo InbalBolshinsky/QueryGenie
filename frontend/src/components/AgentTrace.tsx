@@ -1,4 +1,4 @@
-import Lottie from 'lottie-react';
+import { Lottie } from 'lottie-react';
 import genie from '../assets/genie.json';
 import type { AgentEvent } from '../api';
 import styles from '../App.module.css';
@@ -11,7 +11,7 @@ export default function AgentTrace({ events, running }: { events: AgentEvent[]; 
   return (
     <section className={styles.card}>
       <div className={styles.traceHeader}>
-        {running && <Lottie animationData={genie} className={styles.genie} />}
+        {running && <Lottie src={genie} className={styles.genie} autoplay loop />}
         <div>
           <h2>{running ? 'The Genie is working…' : 'How the Genie got here'}</h2>
           <p className={styles.muted}>
