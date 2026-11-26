@@ -11,6 +11,11 @@ back with charts and a short summary. You watch every step live as it happens.
 Originally built at the **8<sup>th</sup> National Israeli Hackathon** at HIT (Holon Institute of Technology), then rebuilt
 as a real tool-using agent.
 
+<p align="center">
+  <img src="docs/screenshot.png" width="560" alt="QueryGenie results for a Head of Sales: revenue trend, top customers, categories, countries and products, with an overall summary">
+  <br><sub>A real run for a "Head of Sales": the agent ran 6 queries and produced 5 charts and a summary, all from the database.</sub>
+</p>
+
 ---
 
 ## How the agent works
