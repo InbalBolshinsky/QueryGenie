@@ -140,6 +140,7 @@ def test_schema_quotes_table_names(db):
 def test_analyze_endpoint_streams_ndjson(db, monkeypatch):
     monkeypatch.setenv("DATABASE_PATH", str(db.path))  # skips the Northwind download
     monkeypatch.setattr(main, "db", db)
+    monkeypatch.setattr(main, "LLM_API_KEY", "test-key")
     monkeypatch.setattr(main, "get_llm", lambda: FakeLLM(HAPPY_PATH))
     with TestClient(main.app) as client:
         response = client.post("/api/analyze", json=PROFILE.model_dump())
