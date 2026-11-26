@@ -80,6 +80,21 @@ Open http://localhost:5173 and click **Fill in an example**, or describe your ow
 
 **Use your own data:** point `DATABASE_PATH` in `backend/.env` at any SQLite file.
 
+## Deploy (free)
+
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/InbalBolshinsky/QueryGenie)
+
+1. Click the button (or in Render: **New → Blueprint** and pick this repo). It reads [render.yaml](render.yaml).
+2. Paste your Gemini key when it asks for `LLM_API_KEY`.
+3. Render builds the [Dockerfile](Dockerfile) and gives you a `https://<name>.onrender.com` URL. It redeploys on every push to `main` once CI passes.
+
+The free instance sleeps after 15 minutes without traffic, so the first visit after a break takes about a minute to wake up.
+
+The same image runs anywhere Docker does:
+```bash
+docker build -t querygenie . && docker run -p 8000:8000 -e LLM_API_KEY=your-key querygenie
+```
+
 ## Tests
 
 ```bash

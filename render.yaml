@@ -1,0 +1,13 @@
+# Render Blueprint: one free web service built from the Dockerfile.
+services:
+  - type: web
+    name: querygenie
+    runtime: docker
+    plan: free
+    healthCheckPath: /api/health
+    autoDeployTrigger: checksPass # redeploy on pushes to main once CI passes
+    envVars:
+      - key: LLM_API_KEY
+        sync: false # entered in the Render dashboard, never committed
+      - key: LLM_FALLBACK_MODELS
+        value: gemini-3.5-flash-lite
