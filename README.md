@@ -3,6 +3,8 @@
 [![Hackathon](https://img.shields.io/badge/HIT%20Hackathon-8th-blueviolet)](https://www.ortra.com/events/hackathon5/%D7%AA%D7%9B%D7%A0%D7%99%D7%AA.aspx)
 
 > **AI that answers your questions before you ask.**
+>
+> **Live demo: [querygenie-ej38.onrender.com](https://querygenie-ej38.onrender.com)** (free hosting, so the first visit may take a minute to wake up)
 
 Tell QueryGenie what your company does and what your job is. An **AI agent** then explores the company database by
 itself: it decides what's worth knowing for your role, writes SQL, reads the results, fixes its own mistakes, and comes
