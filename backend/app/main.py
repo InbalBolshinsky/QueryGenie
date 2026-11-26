@@ -24,6 +24,8 @@ FRONTEND_DIST = BACKEND_DIR.parent / "frontend" / "dist"
 LLM_BASE_URL = os.getenv("LLM_BASE_URL", "https://generativelanguage.googleapis.com/v1beta/openai/")
 LLM_MODEL = os.getenv("LLM_MODEL", "gemini-3.8-flash")
 LLM_API_KEY = os.getenv("LLM_API_KEY", "")
+# Optional comma-separated backups, used when the main model is overloaded.
+LLM_FALLBACK_MODELS = [m.strip() for m in os.getenv("LLM_FALLBACK_MODELS", "").split(",") if m.strip()]
 
 db = Database(DB_PATH)
 
@@ -39,8 +41,8 @@ app = FastAPI(title="QueryGenie", lifespan=lifespan)
 
 
 def get_llm() -> openai.OpenAI:
-    # Free tiers rate-limit aggressively; the SDK retries 429s with backoff.
-    return openai.OpenAI(base_url=LLM_BASE_URL, api_key=LLM_API_KEY or "not-set", max_retries=5)
+    # The SDK retries 429/5xx/timeouts with backoff before the agent falls back to another model.
+    return openai.OpenAI(base_url=LLM_BASE_URL, api_key=LLM_API_KEY or "not-set", max_retries=2, timeout=60)
 
 
 @app.get("/api/health")
@@ -63,12 +65,12 @@ def _ndjson(profile: Profile) -> Iterator[str]:
         yield _error("No LLM key configured. Add a free Gemini key as LLM_API_KEY in backend/.env (see .env.example).")
         return
     try:
-        for event in run_agent(profile, db, get_llm(), LLM_MODEL):
+        for event in run_agent(profile, db, get_llm(), [LLM_MODEL, *LLM_FALLBACK_MODELS]):
             yield json.dumps(event, default=str) + "\n"
     except openai.AuthenticationError:
         yield _error("The LLM rejected the API key. Set LLM_API_KEY in backend/.env.")
-    except openai.RateLimitError:
-        yield _error("The LLM's free-tier rate limit was hit. Wait a minute and try again.")
+    except (openai.RateLimitError, openai.InternalServerError, openai.APITimeoutError):
+        yield _error("The LLM is overloaded or rate-limited right now (free tier). Try again in a minute.")
     except openai.APIError as e:
         logging.exception("LLM error")
         yield _error(f"LLM error: {e}")

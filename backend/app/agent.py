@@ -8,6 +8,7 @@ event so the UI can show the agent working in real time.
 import json
 from collections.abc import Iterator
 
+import openai
 from openai import OpenAI
 from pydantic import BaseModel
 
@@ -96,7 +97,8 @@ TOOLS = [
 ]
 
 
-def run_agent(profile: Profile, db: Database, client: OpenAI, model: str) -> Iterator[dict]:
+def run_agent(profile: Profile, db: Database, client: OpenAI, models: list[str]) -> Iterator[dict]:
+    """Run the agent with the first model in `models`; later ones are fallbacks if it is overloaded."""
     messages: list[dict] = [
         {"role": "system", "content": SYSTEM_PROMPT.format(schema=db.schema())},
         {"role": "user", "content": "\n".join(f"{k.replace('_', ' ').title()}: {v}" for k, v in profile)},
@@ -104,7 +106,15 @@ def run_agent(profile: Profile, db: Database, client: OpenAI, model: str) -> Ite
     insights: list[dict] = []
 
     for _ in range(MAX_STEPS):
-        response = client.chat.completions.create(model=model, messages=messages, tools=TOOLS)
+        try:
+            response = client.chat.completions.create(model=models[0], messages=messages, tools=TOOLS)
+        except (openai.InternalServerError, openai.RateLimitError, openai.APITimeoutError):
+            # Free tiers are often briefly overloaded; move on to the next model if there is one.
+            if len(models) == 1:
+                raise
+            models = models[1:]
+            yield {"type": "thought", "text": f"The model is busy right now, switching to {models[0]}."}
+            continue
         message = response.choices[0].message
         # model_dump keeps provider-specific fields (e.g. Gemini thought signatures) intact.
         messages.append(message.model_dump(exclude_none=True))

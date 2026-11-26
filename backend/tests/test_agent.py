@@ -3,6 +3,8 @@
 import json
 import sqlite3
 
+import httpx
+import openai
 import pytest
 from fastapi.testclient import TestClient
 from openai.types.chat import ChatCompletion
@@ -77,7 +79,7 @@ HAPPY_PATH = [
 
 def test_agent_recovers_from_sql_error_and_finishes(db):
     llm = FakeLLM(HAPPY_PATH)
-    events = list(run_agent(PROFILE, db, llm, "fake-model"))
+    events = list(run_agent(PROFILE, db, llm, ["fake-model"]))
     types = [e["type"] for e in events]
 
     queries = [e for e in events if e["type"] == "query"]
@@ -102,7 +104,7 @@ def test_finish_is_rejected_until_enough_insights(db):
         [tool_call("save_insight", **INSIGHT)] * 3,
         [tool_call("finish", summary=["done"])],
     ])
-    events = list(run_agent(PROFILE, db, llm, "fake-model"))
+    events = list(run_agent(PROFILE, db, llm, ["fake-model"]))
     first_result = [m for m in llm.requests[1] if m["role"] == "tool"][0]
     assert "at least 3 insights" in first_result["content"]
     assert events[-1] == {"type": "done", "summary": ["done"]}
@@ -114,10 +116,23 @@ def test_invalid_chart_columns_are_reported_to_model(db):
         [tool_call("save_insight", **INSIGHT)] * 3,
         [tool_call("finish", summary=["ok"])],
     ])
-    events = list(run_agent(PROFILE, db, llm, "fake-model"))
+    events = list(run_agent(PROFILE, db, llm, ["fake-model"]))
     first_result = [m for m in llm.requests[1] if m["role"] == "tool"][0]
     assert "not in result" in first_result["content"]
     assert sum(e["type"] == "insight" for e in events) == 3
+
+
+def test_falls_back_to_next_model_when_busy(db):
+    class BusyFirstModel(FakeLLM):
+        def create(self, model, messages, tools):
+            if model == "busy-model":
+                request = httpx.Request("POST", "https://llm.test")
+                raise openai.InternalServerError("busy", response=httpx.Response(503, request=request), body=None)
+            return super().create(model, messages, tools)
+
+    events = list(run_agent(PROFILE, db, BusyFirstModel(HAPPY_PATH), ["busy-model", "backup-model"]))
+    assert "switching to backup-model" in events[0]["text"]
+    assert events[-1]["type"] == "done"
 
 
 def test_database_is_read_only(db):
