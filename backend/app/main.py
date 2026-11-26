@@ -59,6 +59,9 @@ def analyze(profile: Profile):
 
 
 def _ndjson(profile: Profile) -> Iterator[str]:
+    if not LLM_API_KEY and "localhost" not in LLM_BASE_URL:
+        yield _error("No LLM key configured. Add a free Gemini key as LLM_API_KEY in backend/.env (see .env.example).")
+        return
     try:
         for event in run_agent(profile, db, get_llm(), LLM_MODEL):
             yield json.dumps(event, default=str) + "\n"
