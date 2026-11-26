@@ -43,7 +43,7 @@ class FakeLLM:
         self.chat = self
         self.completions = self
 
-    def create(self, model, messages, tools):
+    def create(self, model, messages, **_):
         self.requests.append(list(messages))
         calls = next(self.turns)
         return ChatCompletion.model_validate({
@@ -124,11 +124,11 @@ def test_invalid_chart_columns_are_reported_to_model(db):
 
 def test_falls_back_to_next_model_when_busy(db):
     class BusyFirstModel(FakeLLM):
-        def create(self, model, messages, tools):
+        def create(self, model, messages, **kwargs):
             if model == "busy-model":
                 request = httpx.Request("POST", "https://llm.test")
                 raise openai.InternalServerError("busy", response=httpx.Response(503, request=request), body=None)
-            return super().create(model, messages, tools)
+            return super().create(model, messages, **kwargs)
 
     events = list(run_agent(PROFILE, db, BusyFirstModel(HAPPY_PATH), ["busy-model", "backup-model"]))
     assert "switching to backup-model" in events[0]["text"]
