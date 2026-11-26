@@ -38,7 +38,7 @@ What makes it an agent rather than a prompt:
 - **Its output is grounded.** Charts come from the database, not from model text.
 - **It has guardrails.** Read-only connection, SELECT only, row caps, query timeout, step limit.
 
-The whole loop is about 100 lines of plain Python in [backend/app/agent.py](backend/app/agent.py), with no agent framework.
+The whole agent (prompt, tool definitions and loop) is one file of plain Python under 200 lines, [backend/app/agent.py](backend/app/agent.py), with no agent framework.
 
 ## Tech stack
 
